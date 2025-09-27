@@ -12,8 +12,8 @@ class DockerComputer:
 
     def __init__(
         self,
-        container_name="cua-sample-app",
-        image="ghcr.io/openai/openai-cua-sample-app:latest",
+        container_name="windexter",
+        image="windexter:latest",
         display=":99",
         port_mapping="5900:5900",
     ):

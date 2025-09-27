@@ -1,6 +1,8 @@
-# Computer Using Agent Sample App
+# Windexter
 
 Get started building a [Computer Using Agent (CUA)](https://platform.openai.com/docs/guides/tools-computer-use) with the OpenAI API.
+
+Windexter packages the Computer Using Agent sample experience into an easy-to-run toolkit with consistent naming and publishing-ready metadata. Use it as a baseline for your own browser automation agents powered by the OpenAI API.
 
 > [!CAUTION]  
 > Computer use is in preview. Because the model is still in preview and may be susceptible to exploits and inadvertent mistakes, we discourage trusting it in authenticated environments or for high-stakes tasks.
@@ -125,8 +127,8 @@ If you want to run the sample app with the `Docker` computer environment, you ne
 Open a new shell to build and run the Docker image. The first time you do this, it may take a few minutes, but subsequent runs should be much faster. Once the logs stop, proceed to the next setup step. To stop the container, press CTRL+C on the terminal where you ran the command below.
 
 ```shell
-docker build -t cua-sample-app .
-docker run --rm -it --name cua-sample-app -p 5900:5900 --dns=1.1.1.3 -e DISPLAY=:99 cua-sample-app
+docker build -t windexter .
+docker run --rm -it --name windexter -p 5900:5900 --dns=1.1.1.3 -e DISPLAY=:99 windexter
 ```
 
 > [!NOTE]  
@@ -136,13 +138,13 @@ docker run --rm -it --name cua-sample-app -p 5900:5900 --dns=1.1.1.3 -e DISPLAY=
 > If you get the below error, then you need to kill that container.
 >
 > ```
-> docker: Error response from daemon: Conflict. The container name "/cua-sample-app" is already in use by container "e72fcb962b548e06a9dcdf6a99bc4b49642df2265440da7544330eb420b51d87"
+> docker: Error response from daemon: Conflict. The container name "/windexter" is already in use by container "e72fcb962b548e06a9dcdf6a99bc4b49642df2265440da7544330eb420b51d87"
 > ```
 >
 > Kill that container and try again.
 >
 > ```shell
-> docker rm -f cua-sample-app
+> docker rm -f windexter
 > ```
 
 ### Hosted environment setup
