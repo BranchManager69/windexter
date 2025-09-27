@@ -1,17 +1,38 @@
 # Windexter
 
-Get started building a [Computer Using Agent (CUA)](https://platform.openai.com/docs/guides/tools-computer-use) with the OpenAI API.
+![License](https://img.shields.io/github/license/BranchManager69/windexter.svg) ![Release](https://img.shields.io/github/v/release/BranchManager69/windexter.svg) ![Built with](https://img.shields.io/badge/built%20with-Playwright-45ba4b.svg)
 
-Windexter packages the Computer Using Agent sample experience into an easy-to-run toolkit with consistent naming and publishing-ready metadata. Use it as a baseline for your own browser automation agents powered by the OpenAI API.
+Windexter packages the OpenAI Computer-Using Agent sample into a ready-to-ship toolkit. It gives you a polished CLI for driving browser automation with Codex, a guard-railed step loop, and a foundation for wiring in richer "computer" backends.
 
-> [!CAUTION]  
-> Computer use is in preview. Because the model is still in preview and may be susceptible to exploits and inadvertent mistakes, we discourage trusting it in authenticated environments or for high-stakes tasks.
+## Features
+- **Guided agent loop** – Every turn runs through a confirmable `>` prompt so you can stop or redirect the model on the fly.
+- **Multiple computer targets** – Playwright (local), Docker desktops, Browserbase, and Scrapybara configs are built in.
+- **Extensible interface** – Implement new `Computer` subclasses or tools to expose custom actions beyond the browser.
+- **Summaries & history ready** – Works seamlessly with Codextendo helpers for session recall and transcripts.
+- **Docs & quickstart included** – `docs/quickstart.md` walks through the full setup on WSL/Ubuntu.
 
-## Set Up & Run
+## Table of Contents
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Sample Session](#sample-session)
+- [Configuration](#configuration)
+- [Extending Computers](#extending-computers)
+- [Roadmap](#roadmap)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
 
-Set up python env and install dependencies.
+## Requirements
+- **OS**: macOS 12+, Ubuntu 20.04+/Debian 10+, or Windows 11 via WSL2.
+- **Python**: 3.10 or newer with `venv` support.
+- **Playwright**: Browser binaries plus system dependencies (install steps below).
+- **Optional**: Docker Desktop (for the `docker` computer), Browserbase/Scrapybara accounts for hosted targets.
 
+## Installation
 ```bash
+git clone https://github.com/BranchManager69/windexter.git
+cd windexter
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -19,247 +40,64 @@ python -m playwright install
 # Ubuntu/Debian: install system deps once
 sudo ./.venv/bin/playwright install-deps
 ```
+Need more detail? Follow the shell-by-shell walkthrough in [docs/quickstart.md](docs/quickstart.md).
 
-See [docs/quickstart.md](docs/quickstart.md) for a shell-by-shell walkthrough.
-
-Run CLI to let CUA use a local browser window, using [playwright](https://playwright.dev/). (Stop with CTRL+C)
-
-```shell
+## Usage
+Start the CLI with the default Playwright computer:
+```bash
 python cli.py --computer local-playwright
 ```
-
-> [!NOTE]  
-> The first time you run this, if you haven't used Playwright before, you will be prompted to install dependencies. Execute the command suggested, which will depend on your OS.
-
-Other included sample [computer environments](#computer-environments):
-
-- [Docker](https://docker.com/) (containerized desktop)
-- [Browserbase](https://www.browserbase.com/) (remote browser, requires account)
-- [Scrapybara](https://scrapybara.com) (remote browser or computer, requires account)
-- ...or implement your own `Computer`!
-
-## Overview
-
-The computer use tool and model are available via the [Responses API](https://platform.openai.com/docs/api-reference/responses). At a high level, CUA will look at a screenshot of the computer interface and recommend actions. Specifically, it sends `computer_call`(s) with `actions` like `click(x,y)` or `type(text)` that you have to execute on your environment, and then expects screenshots of the outcomes.
-
-You can learn more about this tool in the [Computer use guide](https://platform.openai.com/docs/guides/tools-computer-use).
-
-## Abstractions
-
-This repository defines two lightweight abstractions to make interacting with CUA agents more ergonomic. Everything works without them, but they provide a convenient separation of concerns.
-
-| Abstraction | File                    | Description                                                                                                                                                                                                  |
-| ----------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Computer`  | `computers/computer.py` | Defines a `Computer` interface for various environments (local desktop, remote browser, etc.). An implementation of `Computer` is responsible for executing any `computer_action` sent by CUA (clicks, etc). |
-| `Agent`     | `agent/agent.py`        | Simple, familiar agent loop – implements `run_full_turn()`, which just keeps calling the model until all computer actions and function calls are handled.                                                    |
-
-## CLI Usage
-
-The CLI (`cli.py`) is the easiest way to get started with CUA. It accepts the following arguments:
-
-- `--computer`: The computer environment to use. See the [Computer Environments](#computer-environments) section below for options. By default, the CLI will use the `local-playwright` environment.
-- `--input`: The initial input to the agent (optional: the CLI will prompt you for input if not provided)
-- `--debug`: Enable debug mode.
-- `--show`: Show images (screenshots) during the execution.
-- `--start-url`: Start the browsing session with a specific URL (only for browser environments). By default, the CLI will start the browsing session with `https://bing.com`.
-
-### Run examples (optional)
-
-The `examples` folder contains more examples of how to use CUA.
-
-```shell
-python -m examples.weather_example
+Run once with an opening directive:
+```bash
+python cli.py --computer local-playwright --input "open bing and search for weather"
 ```
+Prompt-only sessions work too—just launch the command and type your first instruction at the `>` prompt. Hit `Ctrl+C` or type `exit` to stop.
 
-For reference, the file `simple_cua_loop.py` implements the basics of the CUA loop.
-
-You can run it with:
-
-```shell
-python simple_cua_loop.py
+## Sample Session
 ```
-
-## Computer Environments
-
-CUA can work with any `Computer` environment that can handle the [CUA actions](https://platform.openai.com/docs/api-reference/responses/object#responses/object-output) (plus a few extra):
-
-| Action                             | Example                         |
-| ---------------------------------- | ------------------------------- |
-| `click(x, y, button="left")`       | `click(24, 150)`                |
-| `double_click(x, y)`               | `double_click(24, 150)`         |
-| `scroll(x, y, scroll_x, scroll_y)` | `scroll(24, 150, 0, -100)`      |
-| `type(text)`                       | `type("Hello, World!")`         |
-| `wait(ms=1000)`                    | `wait(2000)`                    |
-| `move(x, y)`                       | `move(24, 150)`                 |
-| `keypress(keys)`                   | `keypress(["CTRL", "C"])`       |
-| `drag(path)`                       | `drag([[24, 150], [100, 200]])` |
-
-This sample app provides a set of implemented `Computer` examples, but feel free to add your own!
-
-| Computer            | Option             | Type      | Description                       | Requirements                                                     |
-| ------------------- | ------------------ | --------- | --------------------------------- | ---------------------------------------------------------------- |
-| `LocalPlaywright`   | local-playwright   | `browser` | Local browser window              | [Playwright SDK](https://playwright.dev/)                        |
-| `Docker`            | docker             | `linux`   | Docker container environment      | [Docker](https://docs.docker.com/engine/install/) running        |
-| `Browserbase`       | browserbase        | `browser` | Remote browser environment        | [Browserbase](https://www.browserbase.com/) API key in `.env`    |
-| `ScrapybaraBrowser` | scrapybara-browser | `browser` | Remote browser environment        | [Scrapybara](https://scrapybara.com/dashboard) API key in `.env` |
-| `ScrapybaraUbuntu`  | scrapybara-ubuntu  | `linux`   | Remote Ubuntu desktop environment | [Scrapybara](https://scrapybara.com/dashboard) API key in `.env` |
-
-Using the CLI, you can run the sample app with different computer environments using the options listed above:
-
-```shell
-python cli.py --show --computer <computer-option>
-```
-
-For example, to run the sample app with the `Docker` computer environment, you can run:
-
-```shell
-python cli.py --show --computer docker
-```
-
-#### Contributed Computers
-
-| Computer | Option | Type | Description | Requirements |
-| -------- | ------ | ---- | ----------- | ------------ |
-| `tbd`    | tbd    | tbd  | tbd         | tbd          |
-
-> [!NOTE]  
-> If you've implemented a new computer, please add it to the "Contributed Computers" section of the README.md file. Clearly indicate any auth / signup requirements. See the [Contributing](#contributing) section for more details.
-
-### Docker Setup
-
-If you want to run the sample app with the `Docker` computer environment, you need to build and run a local Docker container.
-
-Open a new shell to build and run the Docker image. The first time you do this, it may take a few minutes, but subsequent runs should be much faster. Once the logs stop, proceed to the next setup step. To stop the container, press CTRL+C on the terminal where you ran the command below.
-
-```shell
-docker build -t windexter .
-docker run --rm -it --name windexter -p 5900:5900 --dns=1.1.1.3 -e DISPLAY=:99 windexter
-```
-
-> [!NOTE]  
-> We use `--dns=1.1.1.3` to restrict accessible websites to a smaller, safer set. We highly recommend you take similar safety precautions.
-
-> [!WARNING]  
-> If you get the below error, then you need to kill that container.
+$ python cli.py --computer local-playwright --input "open bing and search for weather"
+New page created
+screenshot({})
+A browser is open with a blank search field. How would you like me to proceed?
+> type "weather" and press enter
+click({'button': 'left', 'x': 190, 'y': 178})
+type({'text': 'weather'})
+keypress({'keys': ['ENTER']})
+wait({})
+The Bing results show weather information for Palm City, FL. Would you like more detail or a different location?
 >
-> ```
-> docker: Error response from daemon: Conflict. The container name "/windexter" is already in use by container "e72fcb962b548e06a9dcdf6a99bc4b49642df2265440da7544330eb420b51d87"
-> ```
->
-> Kill that container and try again.
->
-> ```shell
-> docker rm -f windexter
-> ```
-
-### Hosted environment setup
-
-This repository contains example implementations of third-party hosted environments.
-To use these, you will need to set up an account with the service by following the links aboveand add your API key to the `.env` file.
-
-## Function Calling
-
-The `Agent` class accepts regular function schemas in `tools` – it will return a hard-coded value for any invocations.
-
-However, if you pass in any `tools` that are also defined in your `Computer` methods, in addition to the required `Computer` methods, they will be routed to your `Computer` to be handled when called. **This is useful for cases where screenshots often don't capture the search bar or back arrow, so CUA may get stuck. So instead, you can provide a `back()` or `goto(url)` functions.** See `examples/playwright_with_custom_functions.py` for an example.
-
-## Risks & Safety considerations
-
-This repository provides example implementations with basic safety measures in place.
-
-We recommend reviewing the best practices outlined in our [guide](https://platform.openai.com/docs/guides/tools-computer-use#risks-and-safety), and making sure you understand the risks involved with using this tool.
-
-# Contributing
-
-## Computers
-
-To contribute a new computer, you'll need to implement it, test it, and submit a PR. Please follow the steps below:
-
-### 1. Implement your computer
-
-You will create or modify the following files (and only these files):
-
-| File                                        | Updates            |
-| ------------------------------------------- | ------------------ |
-| `computers/contrib/[your_computer_name].py` | Add computer file. |
-| `computers/contrib/__init__.py`             | Add to imports.    |
-| `computers/config.py`                       | Add to config.     |
-| `README.md`                                 | Add to README.     |
-
-Create a new file in `computers/contrib/[your_computer_name].py` and define your computer class. Make sure to implement the methods defined in the `Computer` class – use the existing implementations as a reference.
-
-```python
-class YourComputerName:
-    def __init__(self):
-        pass
-
-    def screenshot(self):
-        # TODO: implement
-        pass
-
-    def click(self, x, y):
-        # TODO: implement
-        pass
-
-    # ... add other methods as needed
 ```
 
-> [!NOTE]  
-> For playwright-based computers, make sure to subclass `BasePlaywrightComputer` in `computers/shared/base_playwright.py` – see `computers/default/browserbase.py` for an example.
+## Configuration
+Key CLI flags:
+- `--computer <name>` – Selects a computer backend (see [computers/config.py](computers/config.py)).
+- `--input "..."` – Seeds the first turn with a prompt.
+- `--debug` / `--show` – Print raw responses or display screenshots.
+- `--start-url` – Override the initial browser URL (browser computers only).
 
-Import your new computer in the `computers/contrib/__init__.py`:
+Environment variables:
+- `OPENAI_API_KEY` – Required for Codex access.
+- `CODEX_*` variables – Any Codex CLI settings you already use carry over.
 
-```python
-# ... existing computer imports
-from .your_computer_name import YourComputerName
-```
+## Extending Computers
+Add new environments by creating subclasses under `computers/contrib/`:
+1. Implement the methods defined in `computers/computer.py` or subclass `BasePlaywrightComputer`.
+2. Register the class in `computers/contrib/__init__.py` and `computers/config.py`.
+3. Document the option in the README and `docs/`.
 
-And add your new computer to the `computers_config` dictionary in `computers/config.py`:
+## Roadmap
+- Auto-continue mode for longer unattended runs.
+- GPT-5 sidecar for automated follow-up instructions.
+- Richer computer actions (file system, shell, MCP integrations).
+- Tutorial videos and screenshots.
 
-```python
-# ... existing computers_config
-"your_computer_name": YourComputerName,
-```
+## Troubleshooting
+- **Playwright fails to launch** – rerun `python -m playwright install` and, on Linux, `sudo ./.venv/bin/playwright install-deps`.
+- **401 Invalid API key** – ensure `OPENAI_API_KEY` is exported in the shell running Windexter.
+- **Browser never continues** – respond at the bare `>` prompt with `continue`, a new directive, or update `cli.py` to auto-continue.
 
-Feel free to add your new computer to the "Contributed Computers" section of the README.md file. Clearly indicate any auth / signup requirements.
+## Contributing
+Issues and pull requests are welcome. See open tasks in the [Roadmap](#roadmap) section or propose your own ideas.
 
-### 2. Test your computer
-
-Test your new computer (with the CLI). Make sure:
-
-- Basic search / navigation works.
-- Any setup / teardown is handled correctly.
-- Test e2e with a few different tasks.
-
-Potential gotchas (See `default` computers for reference):
-
-- Scrolling, dragging, and control/command keys.
-- Resource allocation and teardown.
-- Auth / signup requirements.
-
-### 3. Submit a PR
-
-Your PR should clearly define the following:
-
-- Title: `[contrib] Add computer: <your_computer_name>`
-- Description:
-
-```
-# Add computer: <your_computer_name>
-
-#### Affiliations
-
-What organization / company / institution are you affiliated with?
-
-#### Computer Description
-
-- Computer type (e.g. browser, linux)
-
-#### Testing Plan
-
-- Signup steps.
-- Auth steps.
-- Sample queries.
-```
-
-Thank you for your contribution! Please follow all of the above guidelines. Failure to do so may result in your PR being rejected.
+## License
+Windexter is released under the MIT License. See [LICENSE](LICENSE) for details.
