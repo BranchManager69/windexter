@@ -11,11 +11,16 @@ Windexter packages the Computer Using Agent sample experience into an easy-to-ru
 
 Set up python env and install dependencies.
 
-```shell
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+python -m playwright install
+# Ubuntu/Debian: install system deps once
+sudo ./.venv/bin/playwright install-deps
 ```
+
+See [docs/quickstart.md](docs/quickstart.md) for a shell-by-shell walkthrough.
 
 Run CLI to let CUA use a local browser window, using [playwright](https://playwright.dev/). (Stop with CTRL+C)
 
